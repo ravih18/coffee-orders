@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Daily Coffee Orders</title>
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f8f5f2;
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        color: #5a3825;
+        margin-bottom: 5px;
+    }
+    #dateDisplay {
+        text-align: center;
+        font-size: 14px;
+        color: #777;
+        margin-bottom: 20px;
+    }
+    .order-box {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+    button {
+        font-size: 16px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .plus {
+        background: #4CAF50;
+        color: white;
+    }
+    .plus:hover {
+        background: #3a923d;
+    }
+    .minus {
+        background: #E74C3C;
+        color: white;
+    }
+    .minus:hover {
+        background: #c0392b;
+    }
+    .reset {
+        background: #5a3825;
+        color: white;
+        padding: 8px 14px;
+        margin-top: 20px;
+    }
+    .reset:hover {
+        background: #3d2618;
+    }
+    .progress-container {
+        background: #eee;
+        border-radius: 8px;
+        overflow: hidden;
+        height: 18px;
+        margin-top: 5px;
+    }
+    .progress-bar {
+        height: 18px;
+        background: #c08954;
+        width: 0%;
+        transition: width 0.3s;
+    }
+    .drink-row {
+        margin-top: 15px;
+    }
+    .drink-label {
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    #totalOrders {
+        font-size: 18px;
+        text-align: center;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+    .button-group {
+        display: flex;
+        gap: 5px;
+    }
+</style>
+</head>
+<body>
+
+<h1>☕ Daily Coffee Orders</h1>
+<div id="dateDisplay"></div>
+
+<div class="order-box">
+    <div id="totalOrders">Total orders today: 0</div>
+    <div id="drinksList"></div>
+    <button class="reset" onclick="resetOrders()">🔄 Reset Orders</button>
+</div>
+
+<script>
+const drinks = ["Espresso", "Double", "Long", "Creme", "Milk", "Tea", "Hot Chocolate"];
+let orders = {};
+let today = new Date().toDateString();
+
+// Display today's date
+function updateDateDisplay() {
+    const now = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById("dateDisplay").innerText = now.toLocaleDateString(undefined, options);
+}
+
+function loadOrders() {
+    const savedDate = localStorage.getItem("orderDate");
+    const savedOrders = JSON.parse(localStorage.getItem("orders"));
+
+    if (savedDate === today && savedOrders) {
+        orders = savedOrders;
+    } else {
+        resetOrders();
+    }
+}
+
+function resetOrders() {
+    orders = {};
+    drinks.forEach(d => orders[d] = 0);
+    saveOrders();
+    updateUI();
+}
+
+function saveOrders() {
+    localStorage.setItem("orders", JSON.stringify(orders));
+    localStorage.setItem("orderDate", today);
+}
+
+function updateUI() {
+    const drinksList = document.getElementById("drinksList");
+    drinksList.innerHTML = "";
+    const total = Object.values(orders).reduce((a,b) => a+b, 0);
+    document.getElementById("totalOrders").innerText = `Total orders today: ${total}`;
+
+    drinks.forEach(drink => {
+        let count = orders[drink];
+        let percentage = total > 0 ? (count / total) * 100 : 0;
+
+        drinksList.innerHTML += `
+            <div class="drink-row">
+                <div class="drink-label">
+                    <span>${drink}</span>
+                    <div class="button-group">
+                        <button class="minus" onclick="changeOrder('${drink}', -1)">−</button>
+                        <span>${count}</span>
+                        <button class="plus" onclick="changeOrder('${drink}', 1)">+</button>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" style="width:${percentage}%"></div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function changeOrder(drink, delta) {
+    orders[drink] = Math.max(0, orders[drink] + delta);
+    saveOrders();
+    updateUI();
+}
+
+// Auto-reset at midnight
+function scheduleMidnightReset() {
+    const now = new Date();
+    const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0, 0, 0) - now;
+    setTimeout(() => {
+        today = new Date().toDateString();
+        updateDateDisplay();
+        resetOrders();
+        updateUI();
+        scheduleMidnightReset();
+    }, msUntilMidnight);
+}
+
+// Initialize
+updateDateDisplay();
+loadOrders();
+updateUI();
+scheduleMidnightReset();
+</script>
+
+</body>
+</html>
