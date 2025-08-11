@@ -3,35 +3,37 @@
 <head>
 <meta charset="UTF-8">
 <title>Daily Coffee Orders</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     body {
         font-family: 'Segoe UI', sans-serif;
         background: #f8f5f2;
-        max-width: 600px;
+        max-width: 90%;
         margin: auto;
-        padding: 20px;
+        padding: 1em;
     }
     h1 {
         text-align: center;
         color: #5a3825;
-        margin-bottom: 5px;
+        margin-bottom: 0.3em;
+        font-size: 6vw; /* scales with screen */
     }
     #dateDisplay {
         text-align: center;
-        font-size: 14px;
+        font-size: 3.5vw;
         color: #777;
-        margin-bottom: 20px;
+        margin-bottom: 1em;
     }
     .order-box {
         background: #fff;
         border-radius: 12px;
-        padding: 20px;
+        padding: 1em;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        margin-top: 20px;
+        margin-top: 1em;
     }
     button {
-        font-size: 16px;
-        padding: 4px 10px;
+        font-size: 1em;
+        padding: 0.4em 0.8em;
         border-radius: 6px;
         border: none;
         cursor: pointer;
@@ -54,8 +56,9 @@
     .reset {
         background: #5a3825;
         color: white;
-        padding: 8px 14px;
-        margin-top: 20px;
+        padding: 0.5em 1em;
+        margin-top: 1em;
+        font-size: 1em;
     }
     .reset:hover {
         background: #3d2618;
@@ -65,7 +68,7 @@
         border-radius: 8px;
         overflow: hidden;
         height: 18px;
-        margin-top: 5px;
+        margin-top: 0.3em;
     }
     .progress-bar {
         height: 18px;
@@ -74,23 +77,37 @@
         transition: width 0.3s;
     }
     .drink-row {
-        margin-top: 15px;
+        margin-top: 1em;
     }
     .drink-label {
         font-weight: bold;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap; /* allow wrapping on small screens */
     }
     #totalOrders {
-        font-size: 18px;
+        font-size: 1.2em;
         text-align: center;
-        margin-top: 10px;
+        margin-top: 0.5em;
         font-weight: bold;
     }
     .button-group {
         display: flex;
-        gap: 5px;
+        gap: 0.5em;
+        align-items: center;
+    }
+    /* Small screen tweaks */
+    @media (max-width: 600px) {
+        button {
+            font-size: 1.3em; /* bigger for touch */
+        }
+        #dateDisplay {
+            font-size: 4vw;
+        }
+        .drink-label span {
+            font-size: 1.1em;
+        }
     }
 </style>
 </head>
@@ -110,7 +127,6 @@ const drinks = ["Espresso", "Double espresso", "Allongé", "Café crème", "Caf�
 let orders = {};
 let today = new Date().toDateString();
 
-// Display today's date
 function updateDateDisplay() {
     const now = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -120,7 +136,6 @@ function updateDateDisplay() {
 function loadOrders() {
     const savedDate = localStorage.getItem("orderDate");
     const savedOrders = JSON.parse(localStorage.getItem("orders"));
-
     if (savedDate === today && savedOrders) {
         orders = savedOrders;
     } else {
@@ -145,11 +160,9 @@ function updateUI() {
     drinksList.innerHTML = "";
     const total = Object.values(orders).reduce((a,b) => a+b, 0);
     document.getElementById("totalOrders").innerText = `Total orders today: ${total}`;
-
     drinks.forEach(drink => {
         let count = orders[drink];
         let percentage = total > 0 ? (count / total) * 100 : 0;
-
         drinksList.innerHTML += `
             <div class="drink-row">
                 <div class="drink-label">
@@ -174,7 +187,6 @@ function changeOrder(drink, delta) {
     updateUI();
 }
 
-// Auto-reset at midnight
 function scheduleMidnightReset() {
     const now = new Date();
     const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()+1, 0, 0, 0) - now;
